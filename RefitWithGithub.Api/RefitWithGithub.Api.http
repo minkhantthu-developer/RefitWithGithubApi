@@ -1,0 +1,6 @@
+@RefitWithGithub.Api_HostAddress = http://localhost:5076
+
+GET {{RefitWithGithub.Api_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
