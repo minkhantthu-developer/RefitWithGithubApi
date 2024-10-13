@@ -1,3 +1,4 @@
+using Microsoft.Extensions.Options;
 using RefitWithGithub.Api;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -11,6 +12,14 @@ builder.Services.AddOptions<GithubSetting>()
                 .ValidateDataAnnotations()
                 .ValidateOnStart();
 
+builder.Services.AddHttpClient<GithubService>((sp, httpClient) =>
+{
+    var githubSetting = sp.GetRequiredService<IOptions<GithubSetting>>().Value;
+    httpClient.BaseAddress = new Uri(githubSetting.BaseAddress);
+    httpClient.DefaultRequestHeaders.Add("Authorization",githubSetting.AccessToken);
+    httpClient.DefaultRequestHeaders.Add("User-Agent", githubSetting.UserAgent);
+});
+
 var app = builder.Build();
 
 if (app.Environment.IsDevelopment())
@@ -21,25 +30,12 @@ if (app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 
-var summaries = new[]
-{
-    "Freezing", "Bracing", "Chilly", "Cool", "Mild", "Warm", "Balmy", "Hot", "Sweltering", "Scorching"
-};
 
-app.MapGet("/weatherforecast", () =>
+app.MapGet("/users/{userName}",async(string userName,GithubService service) =>
 {
-    var forecast = Enumerable.Range(1, 5).Select(index =>
-        new WeatherForecast
-        (
-            DateOnly.FromDateTime(DateTime.Now.AddDays(index)),
-            Random.Shared.Next(-20, 55),
-            summaries[Random.Shared.Next(summaries.Length)]
-        ))
-        .ToArray();
-    return forecast;
-})
-.WithName("GetWeatherForecast")
-.WithOpenApi();
+    var response=await service.GetByUserNameAsync(userName);
+    return Results.Ok(response);
+});
 
 app.Run();
 
