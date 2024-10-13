@@ -1,4 +1,5 @@
 using Microsoft.Extensions.Options;
+using Refit;
 using RefitWithGithub.Api;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -12,13 +13,21 @@ builder.Services.AddOptions<GithubSetting>()
                 .ValidateDataAnnotations()
                 .ValidateOnStart();
 
+builder.Services.AddTransient<GithubAuthenticationHandler>();
+
 builder.Services.AddHttpClient<GithubService>((sp, httpClient) =>
 {
     var githubSetting = sp.GetRequiredService<IOptions<GithubSetting>>().Value;
     httpClient.BaseAddress = new Uri(githubSetting.BaseAddress);
-    httpClient.DefaultRequestHeaders.Add("Authorization",githubSetting.AccessToken);
-    httpClient.DefaultRequestHeaders.Add("User-Agent", githubSetting.UserAgent);
-});
+})
+    .AddHttpMessageHandler<GithubAuthenticationHandler>();
+
+builder.Services.AddRefitClient<IGithubApi>()
+                .ConfigureHttpClient((sp, httpClient) =>
+                {
+                    var githubSetting = sp.GetRequiredService<IOptions<GithubSetting>>().Value;
+                    httpClient.BaseAddress = new Uri(githubSetting.BaseAddress);
+                }).AddHttpMessageHandler<GithubAuthenticationHandler>();
 
 var app = builder.Build();
 
@@ -31,9 +40,9 @@ if (app.Environment.IsDevelopment())
 app.UseHttpsRedirection();
 
 
-app.MapGet("/users/{userName}",async(string userName,GithubService service) =>
+app.MapGet("/users/{userName}", async (string userName, IGithubApi service) =>
 {
-    var response=await service.GetByUserNameAsync(userName);
+    var response = await service.GetByUserNameAsync(userName);
     return Results.Ok(response);
 });
 
