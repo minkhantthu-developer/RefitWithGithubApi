@@ -1,7 +1,3 @@
-using Microsoft.Extensions.Options;
-using Refit;
-using RefitWithGithub.Api;
-
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddEndpointsApiExplorer();
@@ -39,16 +35,6 @@ if (app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 
-
-app.MapGet("/users/{userName}", async (string userName, IGithubApi service) =>
-{
-    var response = await service.GetByUserNameAsync(userName);
-    return Results.Ok(response);
-});
+app.AddUserService();
 
 app.Run();
-
-internal record WeatherForecast(DateOnly Date, int TemperatureC, string? Summary)
-{
-    public int TemperatureF => 32 + (int)(TemperatureC / 0.5556);
-}

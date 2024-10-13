@@ -1,0 +1,9 @@
+﻿global using Microsoft.Extensions.Options;
+global using Refit;
+global using System.ComponentModel.DataAnnotations;
+global using RefitWithGithub.Api.Api;
+global using RefitWithGithub.Api.AppSettings;
+global using RefitWithGithub.Api.Handlers;
+global using RefitWithGithub.Api.Services;
+global using RefitWithGithub.Api.DTOS;
+global using RefitWithGithub.Api.Features.User;
